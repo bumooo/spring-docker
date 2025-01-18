@@ -59,3 +59,25 @@ jobs:
           path: build/libs/spring-docker-${{ steps.set-version.outputs.VERSION_NAME }}.jar
           # 압축할 파일명
           name: spring-docker-application
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          # 압축 파일명 : Upload Artifact name
+          name: spring-docker-application
+          # 압축 파일을 unzip 위치
+          path: build/libs/
+
+      # 해당 파일을 private_key.pem 사용하여 전송하겠다. StrictHostKeyChecking=no : 엄격한 호스트 키 체크를 하지 않겠다.
+      - name: Deploy to EC2
+        run: |
+          echo "${{ secrets.AWS_EC2_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/spring-docker-${{ needs.build.outputs.release }}.jar ${{ secrets.AWS_EC2_USER_NAME }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER_NAME }}/spring-docker-${{ needs.build.outputs.release }}.jar
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER_NAME }}@${{ secrets.AWS_EC2_HOST }} "pgrep java | xargs kill -9; nohup java -jar /home/${{ secrets.AWS_EC2_USER_NAME }}/spring-docker-${{ needs.build.outputs.release }}.jar > app.log 2>&1 &"
+          rm -rf private_key.pem
