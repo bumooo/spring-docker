@@ -61,7 +61,7 @@ jobs:
         run: docker-compose down spring-docker
 
       - name: Start docker spring-docker container
-        run: docker-compose up spring-docker
+        run: docker-compose up spring-docker -d
 
       - name: Delete old version docker image
         run: docker system prune -f
