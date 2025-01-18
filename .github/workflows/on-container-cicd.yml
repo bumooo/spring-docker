@@ -18,8 +18,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      release: ${{ steps.set-version.outputs.VERSION_NAME }}
     steps:
       # branch Check Out
       - name: Checkout source code

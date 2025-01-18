@@ -1,4 +1,4 @@
-FROM opendjk:21-jdk
+FROM openjdk:21-jdk
 LABEL maintainer="bumoo"
 
 
