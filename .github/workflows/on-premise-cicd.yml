@@ -1,0 +1,61 @@
+
+# Github Actions 목록에서 보여지는 이름
+name: on-premise-cicd
+
+# 어떤 경우에 워크플로우를 실행시킬지 정의 (Trigger)
+on:
+  workflow_dispatch:
+    inputs:
+      tags: # 입력은 v1.0.0
+        description: 'Set Tags Name'
+        required: true
+        default: main
+
+# 모든 Job, Step, 각각 Job, Step 에서 사용가능한 환경 변수를 지정
+# 데이터 타입은 Map 형식
+# env:
+
+#
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.set-version.outputs.VERSION_NAME }}
+    steps:
+      - name: set-version-name # v1.0.0 -> v1-0-0
+        id: set-version
+        run: |
+          echo "VERSION_NAME=$(echo "${{ github.event.inputs.tags }}" | sed "s/\./\-/g")" >> $GITHUB_OUTPUT
+      # 입력한 Version 확인
+      - name: Check Version Name
+        run: |
+          echo "${{ steps.set-version.outputs.VERSION_NAME }}"
+      # branch Check Out
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          ref: '${{ github.event.inputs.tags }}'
+      # Gradlew 권한 추가
+      - name: Grant Execute permission for gradlew
+        run: chmod +w gradlew
+      # JDK 준비
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      # Build Gradle
+      - name: Build with Gradlew
+        run: ./gradlew clean test bootJar
+
+      - name: Add Input Version
+        run: |
+          mv build/libs/spring-docker-0.0.1-SNAPSHOT.jar build/libs/spring-docker-${{ steps.set-version.outputs.VERSION_NAME }}.jar
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # 업로드할 파일
+          path: build/libs/spring-docker-${{ steps.set-version.outputs.VERSION_NAME }}.jar
+          # 압축할 파일명
+          name: spring-docker-application
