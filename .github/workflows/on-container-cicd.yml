@@ -1,0 +1,69 @@
+
+# Github Actions 목록에서 보여지는 이름
+name: on-container-cicd
+
+# 어떤 경우에 워크플로우를 실행시킬지 정의 (Trigger)
+on:
+  workflow_dispatch:
+    inputs:
+      tags: # 입력은 v1.0.0
+        description: 'Set Tags Name'
+        required: true
+        default: main
+
+# 모든 Job, Step, 각각 Job, Step 에서 사용가능한 환경 변수를 지정
+# 데이터 타입은 Map 형식
+# env:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.set-version.outputs.VERSION_NAME }}
+    steps:
+      # branch Check Out
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: '${{ github.event.inputs.tags }}'
+      # Gradlew 권한 추가
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      # JDK 준비
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      # Build Gradle
+      - name: Build with gradlew
+        run: ./gradlew clean test bootJar
+      # Build Docker Image
+      - name: Build docker image
+        run: docker build -t ${{ secrets.DOCKER_HUB_USER_NAME }}/spring-docker .
+      # Login DockerHub
+      - name: Login DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER_NAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      # Push Docker Image to Docker Repository
+      - name: Push docker image to docker repository
+        run: docker push ${{ secrets.DOCKER_HUB_USER_NAME }}/spring-docker
+
+  run-docker-image-on-ec2:
+    run-on: self-hosted
+    needs:
+      - build
+    steps:
+      - name: Pull docker image
+        run: docker pull ${{ secrets.DOCKER_HUB_USER_NAME }}/spring-docker
+
+      - name: Stop docker spring-docker container
+        run: docker-compose down spring-docker
+
+      - name: Start docker spring-docker container
+        run: docker-compose up spring-docker
+
+      - name: Delete old version docker image
+        run: docker system prune -f
