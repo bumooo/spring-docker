@@ -52,7 +52,7 @@ jobs:
         run: docker push ${{ secrets.DOCKER_HUB_USER_NAME }}/spring-docker
 
   run-docker-image-on-ec2:
-    run-on: self-hosted
+    runs-on: self-hosted
     needs:
       - build
     steps:
