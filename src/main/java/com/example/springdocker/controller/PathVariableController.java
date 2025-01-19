@@ -9,6 +9,9 @@ public class PathVariableController {
 
     @GetMapping("/{path}")
     public String mainView(@PathVariable("path") String path) {
+        if ("안녕".equals(path)) {
+            return "안녕!!";
+        }
         return path;
     }
 }
