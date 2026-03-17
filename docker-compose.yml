@@ -15,6 +15,7 @@ services:
       - "50000:50000"
     volumes:
       - ${HOST_JENKINS_HOME}:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
     links:
       - slave-1
 
@@ -27,3 +28,5 @@ services:
       - ${HOST_JENKINS_SLAVE_1}:/home/jenkins
     environment:
       - JENKINS_SLAVE_SSH_PUBKEY=ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQChR63d3v9lXYlWAkDWHe+hsPscnmt0EkJ6xxqaZ8KUVY06MZ9gwPb0PqAENKDErc87etftFHCgaI5zQrwlcuC4K3DxkbrVz0EIxWsy0OrtaBp2fRGQ1tCU71QhXhqjF/fLCvZBrNMpD9AO90RX9g+DZAFDyQmNZ8aCtbeScdLozfmdfjBuaE+DljlYhVxLsk7JQCbTlsHWH2WzcAQnGvkqtH/QimDkEoOv6xLQ03M0zHsLd94vN/40AESJpiwT2Qr0BlMULPf8JmjOR4dT2ZcRe/+RXEtqR/JLem7LhkIBfRvPvuKeH4RBdRz951VtcC5ORDKNslcQLLwTI5GSUcHZBtz2u22PZBj882vuR7dkO5uLK80toQQTX37xef8KLj4hmqirDJyse39Y3TywuaXCY5+3pmqhIfUCRcpG/aydJzKYLoRkh+pihZ/JbZlWEoGItRO6/bnRXiZiMRcJav8VeTZY8AyiVdnHw3d1T/VampcG93wtnCqv4L+57shEJRU=
+
+  # echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
